@@ -33,11 +33,16 @@ func (account *Account) Property(name string) (p any, ok bool) {
 
 func (account *Account) Delete() error {
     URI := URI_ACCOUNTS + "/" + account.properties["id"].(string)
-    _, code, err := makeRequest("DELETE", URI, nil, account.bearer)
+    request := requestData {
+        uri: URI,
+        method: "DELETE",
+        bearer: account.bearer,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return err
     }
-    if code != 204 {
+    if response.code != 204 {
         return errors.New("failed to delete account")
     }
     return nil
@@ -86,14 +91,19 @@ func GetIdAndToken(address string, password string) (string, string, error) {
         "password": password,
     }
     body := make(map[string]any)
-    response, code, err := makeRequest("POST", URI_TOKEN, data, "")
+    request := requestData {
+        uri: URI_TOKEN,
+        method: "POST",
+        body: data,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return "", "", err
     }
-    if code != 200 {
+    if response.code != 200 {
         return "", "", errors.New("failed to get id and token")
     }
-    err = json.Unmarshal(response, &body)
+    err = json.Unmarshal(response.body, &body)
     if err != nil {
         return "", "", err
     }
@@ -103,14 +113,19 @@ func GetIdAndToken(address string, password string) (string, string, error) {
 func LoginWithToken(id string, token string) (*Account, error) {
     account := new(Account)
     uri := URI_ACCOUNTS + "/" + id
-    response, code, err := makeRequest("GET", uri, nil, token)
+    request := requestData {
+        uri: uri,
+        method: "GET",
+        bearer: token,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return nil, err
     }
-    if code != 200 {
+    if response.code != 200 {
         return nil, errors.New("failed to get account")
     }
-    json.Unmarshal(response, &account.properties)
+    json.Unmarshal(response.body, &account.properties)
     account.address = account.properties["address"].(string)
     account.bearer = token
     return account, nil
@@ -123,11 +138,16 @@ func NewAccountWithOptions(options Options) (*Account, error) {
         "address": address,
         "password": password,
     }
-    _, code, err := makeRequest("POST", URI_ACCOUNTS, data, "")
+    request := requestData {
+        uri: URI_ACCOUNTS,
+        method: "POST",
+        body: data,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return nil, err
     }
-    if code != 201 {
+    if response.code != 201 {
         return nil, errors.New("failed to create an account")
     }
     account, err := Login(address, password)

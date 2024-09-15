@@ -40,16 +40,21 @@ type Attachment struct {
 func (account *Account) AllMessages(page int) ([]Message, error) {
     var data map[string][]Message
     URI := URI_MESSAGES + "?page=" + strconv.Itoa(page)
-    body, code, err := makeRequest("GET", URI, nil, account.bearer)
+    request := requestData {
+        uri: URI,
+        method: "GET",
+        bearer: account.bearer,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return nil, err
     }
-    if code != 200 {
+    if response.code != 200 {
         return nil, errors.New("failed to get messages")
     }
-    json.Unmarshal(body, &data)
+    json.Unmarshal(response.body, &data)
     messages := data["hydra:member"]
-    for i := range messages {
+    for i, _ := range messages {
         msg, err := account.MessageById(messages[i].ID)
         if err != nil {
             return nil, err
@@ -62,14 +67,19 @@ func (account *Account) AllMessages(page int) ([]Message, error) {
 func (account *Account) MessageById(id string) (Message, error) {
     var msg Message
     URI := URI_MESSAGES + "/" + id
-    body, code, err := makeRequest("GET", URI, nil, account.bearer)
+    request := requestData {
+        uri: URI,
+        method: "GET",
+        bearer: account.bearer,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return Message{}, err
     }
-    if code != 200 {
+    if response.code != 200 {
         return Message{}, errors.New("failed to get message")
     }
-    json.Unmarshal(body, &msg)
+    json.Unmarshal(response.body, &msg)
     return msg, nil
 }
 
@@ -114,14 +124,19 @@ func (account *Account) LastMessage() (Message, error) {
 
 func (account *Account) DeleteMessage(id string) error {
     URI := URI_MESSAGES + "/" + id
-    _, code, err := makeRequest("DELETE", URI, nil, account.bearer)
+    request := requestData {
+        uri: URI,
+        method: "DELETE",
+        bearer: account.bearer,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return err
     }
-    if code == 404 {
+    if response.code == 404 {
         return errors.New("message with id " + id + " was not found")
     }
-    if code != 204 {
+    if response.code != 204 {
         return errors.New("failed to delete message")
     }
     return nil
@@ -129,14 +144,19 @@ func (account *Account) DeleteMessage(id string) error {
 
 func (account *Account) MarkMessage(id string) error {
     URI := URI_MESSAGES + "/" + id
-    _, code, err := makeRequest("PATCH", URI, nil, account.bearer)
+    request := requestData {
+        uri: URI,
+        method: "PATCH",
+        bearer: account.bearer,
+    }
+    response, err := makeRequest(request)
     if err != nil {
         return err
     }
-    if code == 404 {
+    if response.code == 404 {
         return errors.New("message with id " + id + " was not found")
     }
-    if code != 200 {
+    if response.code != 200 {
         return errors.New("failed to mark message")
     }
     return nil

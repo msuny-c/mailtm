@@ -15,14 +15,18 @@ type Domain struct {
 }
 
 func AvailableDomains() ([]Domain, error) {
-	body, code, err := makeRequest("GET", URI_DOMAINS, nil, "")
+	request := requestData {
+		uri: URI_DOMAINS,
+		method: "GET",
+	}
+	response, err := makeRequest(request)
 	if err != nil {
 		return nil, err
 	}
-	if code != 200 {
+	if response.code != 200 {
 		return nil, err
 	}
 	data := map[string][]Domain{}
-	json.Unmarshal(body, &data)
+	json.Unmarshal(response.body, &data)
 	return data["hydra:member"], nil
 }
