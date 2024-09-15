@@ -26,7 +26,7 @@ import "github.com/msuny-c/mailtm"
 
 func main() {
     opts := mailtm.Options {
-        Domain: mailtm.AvailableDomains()[0],
+        Domain: mailtm.AvailableDomains()[0].Domain,
         Username: "someusername",
         Password: "mypassword",
     }
