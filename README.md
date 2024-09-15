@@ -11,7 +11,7 @@ go get github.com/msuny-c/mailtm
 ### Register
 You can create a new account with random credentials
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.NewAccount()
@@ -22,11 +22,11 @@ func main() {
 ```
 Or provide data directly
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     opts := mailtm.Options {
-        Domain: mailtm.AvailableDomains()[0],
+        Domain: mailtm.AvailableDomains()[0].Domain,
         Username: "someusername",
         Password: "mypassword",
     }
@@ -39,7 +39,7 @@ func main() {
 ### Login
 You can login to your existing account using your address and password
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.Login("username@mail.tm", "mypassword")
@@ -50,7 +50,7 @@ func main() {
 ```
 Or using Bearer token
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.LoginWithToken("bearertoken")
@@ -62,7 +62,7 @@ func main() {
 ### Working with messages
 To get a message you can use the `AllMessages()` method, which returns a slice of messages with their contents on a specific page
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.NewAccount()
@@ -78,7 +78,7 @@ func main() {
 You can get a message channel that will receive new messages from current moment
 ```go
 import (
-    "github.com/msuny-c"
+    "github.com/msuny-c/mailtm"
     "context"
 )
 
@@ -102,7 +102,7 @@ func main() {
 ```
 Also you can get the last message or by it's id
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.NewAccount()
@@ -118,7 +118,7 @@ func main() {
 ```
 And of course you can delete message
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.NewAccount()
@@ -135,7 +135,7 @@ func main() {
 ### Account
 You can get account's properties (those that are returned in the response by [api.mail.tm](https://api.mail.tm))
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.NewAccount()
@@ -147,7 +147,7 @@ func main() {
 ```
 Also get address, password and token fields
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.NewAccount()
@@ -161,7 +161,7 @@ func main() {
 ```
 If you wish you can delete your account
 ```go
-import "github.com/msuny-c"
+import "github.com/msuny-c/mailtm"
 
 func main() {
     account, err := mailtm.NewAccount()
