@@ -60,7 +60,7 @@ func main() {
 }
 ```
 ### Working with messages
-To get a message you can use the `AllMessages()` method, which returns a slice of messages with their contents on a specific page
+To get a message you can use the `MessagesAt(id)` method, which returns a slice of messages with their contents on a specific page
 ```go
 import "github.com/msuny-c/mailtm"
 
@@ -69,7 +69,7 @@ func main() {
     if err != nil {
         panic(err)
     }
-    msgs, err := account.AllMessages(1)
+    msgs, err := account.MessagesAt(1)
     if err != nil {
         print("failed to get messages")
     }
