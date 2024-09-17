@@ -37,7 +37,7 @@ type Attachment struct {
     DownloadURL string `json:"downloadUrl"`
 }
 
-func (account *Account) AllMessages(page int) ([]Message, error) {
+func (account *Account) MessagesAt(page int) ([]Message, error) {
     var data map[string][]Message
     URI := URI_MESSAGES + "?page=" + strconv.Itoa(page)
     request := requestData {
@@ -112,7 +112,7 @@ func (account *Account) MessagesChan(ctx context.Context) (<- chan Message) {
 
 
 func (account *Account) LastMessage() (Message, error) {
-    msgs, err := account.AllMessages(1)
+    msgs, err := account.MessagesAt(1)
     if err != nil {
         return Message{}, err
     }

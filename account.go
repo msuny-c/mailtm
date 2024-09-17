@@ -74,7 +74,7 @@ func Login(address string, password string) (*Account, error) {
     if err != nil {
         return nil, err
     }
-    account, err := LoginWithToken(id, token)
+    account, err := LoginWithIdAndToken(id, token)
     if err != nil {
         return nil, err
     }
@@ -82,6 +82,26 @@ func Login(address string, password string) (*Account, error) {
     if violations, ok := account.Property("violations"); ok {
         return nil, errors.New(violations.([]any)[0].(map[string]any)["message"].(string))
     }
+    return account, nil
+}
+
+func LoginWithToken(token string) (*Account, error) {
+    account := new(Account)
+    request := requestData {
+        uri: URI_ME,
+        method: "GET",
+        bearer: token,
+    }
+    response, err := makeRequest(request)
+    if err != nil {
+        return nil, err
+    }
+    if response.code != 200 {
+        return nil, errors.New("failed to get account")
+    }
+    json.Unmarshal(response.body, &account.properties)
+    account.address = account.properties["address"].(string)
+    account.bearer = token
     return account, nil
 }
 
@@ -110,7 +130,7 @@ func GetIdAndToken(address string, password string) (string, string, error) {
     return body["id"].(string), body["token"].(string), nil
 }
 
-func LoginWithToken(id string, token string) (*Account, error) {
+func LoginWithIdAndToken(id string, token string) (*Account, error) {
     account := new(Account)
     uri := URI_ACCOUNTS + "/" + id
     request := requestData {
