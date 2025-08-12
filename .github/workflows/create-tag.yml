@@ -1,0 +1,32 @@
+name: Create tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. 1.2.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create and push tag
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version: $VERSION"
+            exit 1
+          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"

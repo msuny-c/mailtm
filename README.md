@@ -1,173 +1,76 @@
-# MailTM Wrapper
-A convenience-oriented [mail.tm](https://mail.tm) API wrapper written in Golang
+# mailtm (Go SDK)
 
-Feel free to report bugs and suggest improvements!
+A minimal, stdlib-only SDK for the [Mail.tm](https://mail.tm) API.
 
-## Installation
+- Temp accounts, auth, read/manage messages, download sources/attachments, SSE realtime.
+- Thread-safe client; functional options; retries with backoff and rate limiting.
+- No external deps (pure `net/http`, `context`, `time`).
+
+## Install
+
+```bash
+go get github.com/msuny-c/mailtm@latest
 ```
-go get github.com/msuny-c/mailtm
-```
-## Getting started
-### Register
-You can create a new account with random credentials
+
+## Quick start
+
 ```go
-import "github.com/msuny-c/mailtm"
+package main
 
-func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-}
-```
-Or provide data directly
-```go
-import "github.com/msuny-c/mailtm"
-
-func main() {
-    opts := mailtm.Options {
-        Domain: mailtm.AvailableDomains()[0].Domain,
-        Username: "someusername",
-        Password: "mypassword",
-    }
-    account, err := mailtm.NewAccountWithOptions(opts)
-    if err != nil {
-        panic(err)
-    }
-}
-```
-### Login
-You can login to your existing account using your address and password
-```go
-import "github.com/msuny-c/mailtm"
-
-func main() {
-    account, err := mailtm.Login("username@mail.tm", "mypassword")
-    if err != nil {
-        panic(err)
-    }
-}
-```
-Or using Bearer token
-```go
-import "github.com/msuny-c/mailtm"
-
-func main() {
-    account, err := mailtm.LoginWithToken("bearertoken")
-    if err != nil {
-        panic(err)
-    }
-}
-```
-### Working with messages
-To get a message you can use the `MessagesAt(id)` method, which returns a slice of messages with their contents on a specific page
-```go
-import "github.com/msuny-c/mailtm"
-
-func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-    msgs, err := account.MessagesAt(1)
-    if err != nil {
-        print("failed to get messages")
-    }
-}
-```
-You can get a message channel that will receive new messages from current moment
-```go
 import (
-    "github.com/msuny-c/mailtm"
-    "context"
+	"context"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/msuny-c/mailtm"
 )
 
 func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-    ctx, cancel := context.WithCancel(context.Background())
-    ch := account.MessagesChan(ctx)
-    for {
-        select {
-        case msg, ok := <- ch:
-            if ok {
-                print(msg.HTML)
-                cancel()
-            }
-        }
-    }
-}
-```
-Also you can get the last message or by it's id
-```go
-import "github.com/msuny-c/mailtm"
+	ctx := context.Background()
 
-func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-    msg1, err := account.MessageById("someid")
-    msg2, err := account.LastMessage()
-    if err != nil {
-        print("failed to get messages")
-    }
-}
-```
-And of course you can delete message
-```go
-import "github.com/msuny-c/mailtm"
+	cli, err := mailtm.New(
+		mailtm.WithUserAgent("mailtm-go/1.0"),
+	)
+	if err != nil { log.Fatal(err) }
 
-func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-    msg, err := account.LastMessage()
-    if err != nil {
-        print("failed to get message")
-    }
-    account.DeleteMessage(msg.ID)
-}
-```
-### Account
-You can get account's properties (those that are returned in the response by [api.mail.tm](https://api.mail.tm))
-```go
-import "github.com/msuny-c/mailtm"
+	doms, err := cli.ListDomains(ctx, 1)
+	if err != nil { log.Fatal(err) }
+	addr := fmt.Sprintf("tester@%s", doms.Member[0].Domain)
 
-func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-    print(account.Property("createdAt"))
-}
-```
-Also get address, password and token fields
-```go
-import "github.com/msuny-c/mailtm"
+	acc, err := cli.CreateAccount(ctx, addr, "strong-password-123")
+	if err != nil { log.Fatal(err) }
 
-func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-    println(account.Address())
-    println(account.Password())
-    println(account.Bearer())
-}
-```
-If you wish you can delete your account
-```go
-import "github.com/msuny-c/mailtm"
+	tok, err := cli.Token(ctx, acc.Address, "strong-password-123")
+	if err != nil { log.Fatal(err) }
 
-func main() {
-    account, err := mailtm.NewAccount()
-    if err != nil {
-        panic(err)
-    }
-    account.Delete()
+	authed := cli.WithToken(tok.Token)
+
+	// Wait up to 30s for the first message via polling
+	msg, err := authed.WaitForFirstMessage(ctx, mailtm.WaitOptions{
+		Timeout:      30 * time.Second,
+		PollInterval: 2 * time.Second,
+	})
+	if err != nil { log.Fatal(err) }
+	fmt.Println("Got message:", msg.Subject)
+
+	// Download raw EML
+	f, _ := os.Create("message.eml")
+	defer f.Close()
+	_ = authed.DownloadByURL(ctx, msg.DownloadURL, f)
 }
 ```
+
+## Highlights
+
+- **Base URL**: `https://api.mail.tm` (HTTPS).  
+- **Auth**: Bearer JWT (`POST /token`), except `/accounts` and `/domains`.
+- **Rate limits**: 8 QPS per IP (SDK defaults to 8 rps token bucket).
+- **Format**: JSON-LD (Hydra) with `hydra:member`, `hydra:totalItems`, `hydra:view`.
+- **Realtime**: Mercure SSE hub at `https://mercure.mail.tm/.well-known/mercure`, topic `/accounts/{id}`.
+
+See `godoc` for the full API surface.
+
+## License
+
+MIT
