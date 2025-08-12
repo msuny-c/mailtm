@@ -25,6 +25,9 @@ type Client struct {
 	token string
 }
 
+// New creates a new Client with the provided options.
+// If no HTTP client is provided, a default client with 30-second timeout is used.
+// If no rate limiter is provided, a default token bucket with 8 tokens capacity is used.
 func New(opts ...Option) (*Client, error) {
 	c := &Client{
 		baseURL:   defaultBaseURL,
@@ -72,6 +75,8 @@ func New(opts ...Option) (*Client, error) {
 	return c, nil
 }
 
+// WithToken returns a new Client instance with the provided JWT token.
+// The new client shares the same configuration as the original but uses the specified token for authentication.
 func (c *Client) WithToken(token string) *Client {
 	cc := *c
 	cc.token = token

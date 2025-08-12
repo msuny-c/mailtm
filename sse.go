@@ -63,9 +63,13 @@ func (s *sseStream) Close() error {
 
 type SSEOption func(*sseConfig)
 
+// WithHubURL sets the SSE hub URL for real-time event subscriptions.
 func WithHubURL(u string) SSEOption       { return func(c *sseConfig) { c.HubURL = u } }
+// WithLastEventID sets the last event ID to resume from when reconnecting.
 func WithLastEventID(id string) SSEOption { return func(c *sseConfig) { c.LastEventID = id } }
 
+// SubscribeAccount establishes a server-sent events (SSE) subscription for real-time account updates.
+// Requires an authenticated client with a valid JWT token. Auto-reconnects on connection failures.
 func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ...SSEOption) (Stream, error) {
 	cfg := sseConfig{
 		HubURL:            "https://mercure.mail.tm/.well-known/mercure",
@@ -199,6 +203,7 @@ func minDur(a, b time.Duration) time.Duration {
 	return b
 }
 
+// DecodeAccountEvent decodes an SSE event containing account data into an Account struct.
 func DecodeAccountEvent(e Event) (*Account, error) {
 	var acc Account
 	if err := json.Unmarshal(e.Data, &acc); err != nil {

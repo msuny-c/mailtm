@@ -39,6 +39,8 @@ type RetryPolicy struct {
 	StatusCodes map[int]struct{}
 }
 
+// DefaultRetryPolicy returns a retry policy with exponential backoff for common transient errors.
+// Retries up to 4 times with base delay of 200ms, max delay of 5 seconds, and 25% jitter.
 func DefaultRetryPolicy() RetryPolicy {
 	return RetryPolicy{
 		MaxAttempts: 4,
@@ -62,6 +64,9 @@ type TokenBucket struct {
 	clock      Clock
 }
 
+// NewTokenBucket creates a new token bucket rate limiter with the specified capacity and refill rate.
+// If capacity or ratePerSecond are <= 0, defaults to 8 are used.
+// If clock is nil, the system clock is used.
 func NewTokenBucket(capacity int, ratePerSecond float64, clock Clock) *TokenBucket {
 	if capacity <= 0 {
 		capacity = 8
@@ -115,6 +120,7 @@ func (tb *TokenBucket) take(ctx Context, n float64) error {
 	}
 }
 
+// WithBaseURL sets the base URL for the API client.
 func WithBaseURL(u string) Option {
 	return func(c *Client) error {
 		c.baseURL = trimRightSlash(u)
@@ -122,6 +128,7 @@ func WithBaseURL(u string) Option {
 	}
 }
 
+// WithHTTPClient sets a custom HTTP client for making requests.
 func WithHTTPClient(hc *http.Client) Option {
 	return func(c *Client) error {
 		if hc != nil {
@@ -131,6 +138,7 @@ func WithHTTPClient(hc *http.Client) Option {
 	}
 }
 
+// WithUserAgent sets a custom User-Agent header for requests.
 func WithUserAgent(ua string) Option {
 	return func(c *Client) error {
 		c.userAgent = ua
@@ -138,6 +146,7 @@ func WithUserAgent(ua string) Option {
 	}
 }
 
+// WithRetry configures the retry policy for handling transient errors.
 func WithRetry(r RetryPolicy) Option {
 	return func(c *Client) error {
 		c.retry = r
@@ -145,6 +154,7 @@ func WithRetry(r RetryPolicy) Option {
 	}
 }
 
+// WithRateLimiter sets a custom rate limiter to control request frequency.
 func WithRateLimiter(rl *TokenBucket) Option {
 	return func(c *Client) error {
 		c.rl = rl
@@ -152,6 +162,7 @@ func WithRateLimiter(rl *TokenBucket) Option {
 	}
 }
 
+// WithLogger sets a custom logger for debugging and monitoring.
 func WithLogger(l Logger) Option {
 	return func(c *Client) error {
 		if l != nil {
@@ -161,6 +172,7 @@ func WithLogger(l Logger) Option {
 	}
 }
 
+// WithClock sets a custom clock implementation, primarily for testing.
 func WithClock(cl Clock) Option {
 	return func(c *Client) error {
 		if cl != nil {

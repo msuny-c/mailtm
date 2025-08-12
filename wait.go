@@ -13,6 +13,9 @@ type WaitOptions struct {
 	FromContains  string
 }
 
+// WaitForFirstMessage polls for messages until one matching the filter criteria is found.
+// Returns the first matching message or an error if timeout is reached.
+// Default timeout is 30 seconds and poll interval is 2 seconds.
 func (c *Client) WaitForFirstMessage(ctx context.Context, opts WaitOptions) (*Message, error) {
 	if opts.Timeout <= 0 {
 		opts.Timeout = 30 * time.Second

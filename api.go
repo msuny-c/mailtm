@@ -64,6 +64,8 @@ func (c *Client) doJSON(ctx context.Context, method, p string, body any, out any
 	return dec.Decode(out)
 }
 
+// ListDomains retrieves a paginated list of available domains.
+// Pass page=0 to get the first page.
 func (c *Client) ListDomains(ctx context.Context, page int) (Collection[Domain], error) {
 	var coll Collection[Domain]
 	p := "/domains"
@@ -74,6 +76,7 @@ func (c *Client) ListDomains(ctx context.Context, page int) (Collection[Domain],
 	return coll, err
 }
 
+// GetDomain retrieves details for a specific domain by its ID.
 func (c *Client) GetDomain(ctx context.Context, id string) (*Domain, error) {
 	var d Domain
 	err := c.doJSON(ctx, http.MethodGet, "/domains/"+url.PathEscape(id), nil, &d)
@@ -83,6 +86,7 @@ func (c *Client) GetDomain(ctx context.Context, id string) (*Domain, error) {
 	return &d, nil
 }
 
+// CreateAccount creates a new account with the specified email address and password.
 func (c *Client) CreateAccount(ctx context.Context, address, password string) (*Account, error) {
 	payload := map[string]string{"address": address, "password": password}
 	var acc Account
@@ -93,6 +97,7 @@ func (c *Client) CreateAccount(ctx context.Context, address, password string) (*
 	return &acc, nil
 }
 
+// Token exchanges user credentials for a JWT authentication token.
 func (c *Client) Token(ctx context.Context, address, password string) (*Token, error) {
 	payload := map[string]string{"address": address, "password": password}
 	var tok Token
@@ -103,6 +108,7 @@ func (c *Client) Token(ctx context.Context, address, password string) (*Token, e
 	return &tok, nil
 }
 
+// GetAccount retrieves account details by account ID.
 func (c *Client) GetAccount(ctx context.Context, id string) (*Account, error) {
 	var acc Account
 	err := c.doJSON(ctx, http.MethodGet, "/accounts/"+url.PathEscape(id), nil, &acc)
@@ -112,10 +118,12 @@ func (c *Client) GetAccount(ctx context.Context, id string) (*Account, error) {
 	return &acc, nil
 }
 
+// DeleteAccount permanently deletes an account by its ID.
 func (c *Client) DeleteAccount(ctx context.Context, id string) error {
 	return c.doJSON(ctx, http.MethodDelete, "/accounts/"+url.PathEscape(id), nil, nil)
 }
 
+// Me retrieves the current authenticated user's account information.
 func (c *Client) Me(ctx context.Context) (*Account, error) {
 	var acc Account
 	err := c.doJSON(ctx, http.MethodGet, "/me", nil, &acc)
@@ -125,6 +133,8 @@ func (c *Client) Me(ctx context.Context) (*Account, error) {
 	return &acc, nil
 }
 
+// ListMessages retrieves a paginated list of messages in the mailbox.
+// Pass page=0 to get the first page.
 func (c *Client) ListMessages(ctx context.Context, page int) (Collection[Message], error) {
 	var coll Collection[Message]
 	p := "/messages"
@@ -135,6 +145,7 @@ func (c *Client) ListMessages(ctx context.Context, page int) (Collection[Message
 	return coll, err
 }
 
+// GetMessage retrieves the full details of a specific message by its ID.
 func (c *Client) GetMessage(ctx context.Context, id string) (*Message, error) {
 	var m Message
 	err := c.doJSON(ctx, http.MethodGet, "/messages/"+url.PathEscape(id), nil, &m)
@@ -144,14 +155,17 @@ func (c *Client) GetMessage(ctx context.Context, id string) (*Message, error) {
 	return &m, nil
 }
 
+// DeleteMessage permanently deletes a message by its ID.
 func (c *Client) DeleteMessage(ctx context.Context, id string) error {
 	return c.doJSON(ctx, http.MethodDelete, "/messages/"+url.PathEscape(id), nil, nil)
 }
 
+// MarkRead marks a message as read by its ID.
 func (c *Client) MarkRead(ctx context.Context, id string) error {
 	return c.doJSON(ctx, http.MethodPatch, "/messages/"+url.PathEscape(id), nil, nil)
 }
 
+// GetSource retrieves the raw email source by source ID.
 func (c *Client) GetSource(ctx context.Context, sourceID string) (*Source, error) {
 	var s Source
 	err := c.doJSON(ctx, http.MethodGet, "/sources/"+url.PathEscape(sourceID), nil, &s)
@@ -161,6 +175,8 @@ func (c *Client) GetSource(ctx context.Context, sourceID string) (*Source, error
 	return &s, nil
 }
 
+// DownloadByURL downloads content from a URL and writes it to the provided writer.
+// The URL can be relative (resolved against the base URL) or absolute.
 func (c *Client) DownloadByURL(ctx context.Context, rawURL string, w io.Writer) error {
 	u, err := c.absURL(rawURL)
 	if err != nil {
@@ -182,6 +198,8 @@ func (c *Client) DownloadByURL(ctx context.Context, rawURL string, w io.Writer) 
 	return err
 }
 
+// IterateMessages iterates through all messages in the mailbox, calling the provided function for each message.
+// If the function returns an error, iteration stops and the error is returned.
 func (c *Client) IterateMessages(ctx context.Context, fn func(Message) error) error {
 	u := "/messages?page=1"
 	for {
