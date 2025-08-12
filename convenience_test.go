@@ -18,17 +18,17 @@ func TestCreateRandomAccount_Flow(t *testing.T) {
 			if page == "" || page == "1" {
 				_ = json.NewEncoder(w).Encode(map[string]any{
 					"hydra:member": []map[string]any{
-						{"id":"d1","domain":"example1.tm","isActive":true,"isPrivate":false},
+						{"id": "d1", "domain": "example1.tm", "isActive": true, "isPrivate": false},
 					},
 					"hydra:totalItems": 2,
-					"hydra:view": map[string]any{"hydra:next": "/domains?page=2"},
+					"hydra:view":       map[string]any{"hydra:next": "/domains?page=2"},
 				})
 				return
 			}
 			if page == "2" {
 				_ = json.NewEncoder(w).Encode(map[string]any{
 					"hydra:member": []map[string]any{
-						{"id":"d2","domain":"example2.tm","isActive":true,"isPrivate":false},
+						{"id": "d2", "domain": "example2.tm", "isActive": true, "isPrivate": false},
 					},
 					"hydra:totalItems": 2,
 				})
@@ -36,12 +36,12 @@ func TestCreateRandomAccount_Flow(t *testing.T) {
 			}
 		case r.URL.Path == "/accounts" && r.Method == http.MethodPost:
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"id":"a1","address":"placeholder@example1.tm",
+				"id": "a1", "address": "placeholder@example1.tm",
 			})
 			return
 		case r.URL.Path == "/token" && r.Method == http.MethodPost:
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"id":"a1","token":"tkn",
+				"id": "a1", "token": "tkn",
 			})
 			return
 		}
@@ -73,11 +73,11 @@ func TestDownloadAllAttachments(t *testing.T) {
 		switch {
 		case r.URL.Path == "/messages/m1":
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"id": "m1",
-				"from": map[string]any{"name":"", "address":""},
+				"id":   "m1",
+				"from": map[string]any{"name": "", "address": ""},
 				"attachments": []map[string]any{
-					{"id":"a1","filename":"file.txt","downloadUrl":"/dl/1"},
-					{"id":"a2","filename":"file.txt","downloadUrl":"/dl/2"},
+					{"id": "a1", "filename": "file.txt", "downloadUrl": "/dl/1"},
+					{"id": "a2", "filename": "file.txt", "downloadUrl": "/dl/2"},
 				},
 			})
 			return

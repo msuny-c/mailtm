@@ -64,7 +64,8 @@ func (s *sseStream) Close() error {
 type SSEOption func(*sseConfig)
 
 // WithHubURL sets the SSE hub URL for real-time event subscriptions.
-func WithHubURL(u string) SSEOption       { return func(c *sseConfig) { c.HubURL = u } }
+func WithHubURL(u string) SSEOption { return func(c *sseConfig) { c.HubURL = u } }
+
 // WithLastEventID sets the last event ID to resume from when reconnecting.
 func WithLastEventID(id string) SSEOption { return func(c *sseConfig) { c.LastEventID = id } }
 

@@ -133,7 +133,7 @@ func cryptoRandInt(n int) (int, error) {
 		if n <= 0 {
 			return 0, errors.New("invalid bound")
 		}
-		if m := (1<<63) - (1<<63)%uint64(n); v < uint64(m) {
+		if m := (1 << 63) - (1<<63)%uint64(n); v < uint64(m) {
 			return int(v % uint64(n)), nil
 		}
 	}
