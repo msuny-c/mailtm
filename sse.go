@@ -63,7 +63,7 @@ func (s *sseStream) Close() error {
 
 type SSEOption func(*sseConfig)
 
-func WithHubURL(u string) SSEOption { return func(c *sseConfig) { c.HubURL = u } }
+func WithHubURL(u string) SSEOption       { return func(c *sseConfig) { c.HubURL = u } }
 func WithLastEventID(id string) SSEOption { return func(c *sseConfig) { c.LastEventID = id } }
 
 func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ...SSEOption) (Stream, error) {

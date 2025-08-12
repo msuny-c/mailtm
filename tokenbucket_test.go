@@ -17,7 +17,7 @@ func newFakeClock(t0 time.Time) *fakeClock {
 	fc.now.Store(t0)
 	return fc
 }
-func (f *fakeClock) Now() time.Time { return f.now.Load().(time.Time) }
+func (f *fakeClock) Now() time.Time        { return f.now.Load().(time.Time) }
 func (f *fakeClock) Sleep(d time.Duration) {}
 func (f *fakeClock) After(d time.Duration) <-chan time.Time {
 	f.after <- d
@@ -27,7 +27,7 @@ func (f *fakeClock) After(d time.Duration) <-chan time.Time {
 }
 
 func TestTokenBucket_TakeAndCancel(t *testing.T) {
-	fc := newFakeClock(time.Unix(0,0))
+	fc := newFakeClock(time.Unix(0, 0))
 	tb := NewTokenBucket(1, 1, fc)
 	ctx, cancel := context.WithCancel(context.Background())
 	if err := tb.take(ctx, 1); err != nil {

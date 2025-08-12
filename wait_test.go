@@ -17,14 +17,14 @@ func TestWaitForFirstMessage_Polling(t *testing.T) {
 			n := atomic.AddInt32(&calls, 1)
 			if n < 3 {
 				_ = json.NewEncoder(w).Encode(map[string]any{
-					"hydra:member":   []any{},
+					"hydra:member":     []any{},
 					"hydra:totalItems": 0,
 				})
 				return
 			}
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"hydra:member": []map[string]any{
-					{"id": "m1", "subject": "Hello", "from": map[string]any{"name":"X","address":"x@y"}},
+					{"id": "m1", "subject": "Hello", "from": map[string]any{"name": "X", "address": "x@y"}},
 				},
 				"hydra:totalItems": 1,
 			})
@@ -32,7 +32,7 @@ func TestWaitForFirstMessage_Polling(t *testing.T) {
 		}
 		if r.URL.Path == "/messages/m1" {
 			_ = json.NewEncoder(w).Encode(map[string]any{
-				"id": "m1", "subject": "Hello", "from": map[string]any{"name":"X","address":"x@y"},
+				"id": "m1", "subject": "Hello", "from": map[string]any{"name": "X", "address": "x@y"},
 			})
 			return
 		}

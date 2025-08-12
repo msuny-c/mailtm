@@ -12,11 +12,12 @@ import (
 )
 
 type rtFunc func(*http.Request) (*http.Response, error)
+
 func (f rtFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 func newClientWithRT(rt http.RoundTripper, opts ...Option) *Client {
 	options := []Option{
-		WithHTTPClient(&http.Client{ Timeout: 5 * time.Second, Transport: rt }),
+		WithHTTPClient(&http.Client{Timeout: 5 * time.Second, Transport: rt}),
 		WithRetry(RetryPolicy{
 			MaxAttempts: 3,
 			BaseBackoff: 10 * time.Millisecond,
@@ -36,8 +37,10 @@ func newClientWithRT(rt http.RoundTripper, opts ...Option) *Client {
 }
 
 func mkResp(code int, body string, hdr http.Header) *http.Response {
-	if hdr == nil { hdr = make(http.Header) }
-	return &http.Response{ StatusCode: code, Header: hdr, Body: io.NopCloser(bytes.NewBufferString(body)) }
+	if hdr == nil {
+		hdr = make(http.Header)
+	}
+	return &http.Response{StatusCode: code, Header: hdr, Body: io.NopCloser(bytes.NewBufferString(body))}
 }
 
 func TestTransport_RetriesIdempotent(t *testing.T) {
@@ -69,7 +72,7 @@ func TestTransport_NoRetryOnPost(t *testing.T) {
 		return mkResp(502, "badgw", nil), nil
 	})
 	c := newClientWithRT(rt)
-	err := c.doJSON(context.Background(), http.MethodPost, "/accounts", map[string]string{"a":"b"}, nil)
+	err := c.doJSON(context.Background(), http.MethodPost, "/accounts", map[string]string{"a": "b"}, nil)
 	if err == nil {
 		t.Fatal("expected error")
 	}

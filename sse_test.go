@@ -83,7 +83,7 @@ func TestSSE_SubscribeAccount_ReconnectAndLastEventID(t *testing.T) {
 			}
 		}
 	}
-	done:
+done:
 	if strings.Join(ids, " ") != "1 2 3" {
 		t.Fatalf("unexpected ids: %v", ids)
 	}

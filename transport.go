@@ -138,7 +138,7 @@ func (t *wrappedTransport) nextBackoff(attempt int) time.Duration {
 	if max <= 0 {
 		max = 5 * time.Second
 	}
-	exp := min(base * time.Duration(1<<maxInt(attempt-1, 0)), max)
+	exp := min(base*time.Duration(1<<maxInt(attempt-1, 0)), max)
 	j := t.retry.Jitter
 	if j <= 0 {
 		j = 0.25

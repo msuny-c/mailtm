@@ -17,7 +17,7 @@ func TestIterateMessages_Pagination(t *testing.T) {
 			if page == "" || page == "1" {
 				resp := map[string]any{
 					"hydra:member": []map[string]any{
-						{"id": "m1", "subject": "a", "from": map[string]any{"name":"","address":""}},
+						{"id": "m1", "subject": "a", "from": map[string]any{"name": "", "address": ""}},
 					},
 					"hydra:totalItems": 2,
 					"hydra:view": map[string]any{
@@ -30,7 +30,7 @@ func TestIterateMessages_Pagination(t *testing.T) {
 			if page == "2" {
 				resp := map[string]any{
 					"hydra:member": []map[string]any{
-						{"id": "m2", "subject": "b", "from": map[string]any{"name":"","address":""}},
+						{"id": "m2", "subject": "b", "from": map[string]any{"name": "", "address": ""}},
 					},
 					"hydra:totalItems": 2,
 				}
