@@ -108,10 +108,6 @@ func (tb *TokenBucket) take(ctx Context, n float64) error {
 			seconds = 0.001
 		}
 		ch := tb.clock.After(time.Duration(seconds * float64(time.Second)))
-		if elapsed <= 0 {
-			<-ctx.Done()
-			return ctx.Err()
-		}
 		select {
 		case <-ctx.Done():
 			return ctx.Err()

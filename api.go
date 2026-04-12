@@ -1,6 +1,7 @@
 package mailtm
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -38,7 +39,7 @@ func (c *Client) doJSON(ctx context.Context, method, p string, body any, out any
 		if err != nil {
 			return err
 		}
-		rc = io.NopCloser(strings.NewReader(string(b)))
+		rc = io.NopCloser(bytes.NewReader(b))
 		ct = "application/json"
 	}
 	req, err := http.NewRequestWithContext(ctx, method, u, rc)

@@ -23,6 +23,18 @@ type wrappedTransport struct {
 	clock  Clock
 }
 
+// unwrapMailTMTransport returns the innermost RoundTripper beneath any SDK
+// wrappedTransport layers so WithToken does not stack duplicate auth headers.
+func unwrapMailTMTransport(rt http.RoundTripper) http.RoundTripper {
+	for {
+		wt, ok := rt.(*wrappedTransport)
+		if !ok || wt == nil {
+			return rt
+		}
+		rt = wt.base
+	}
+}
+
 func (t *wrappedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	method := strings.ToUpper(req.Method)
 
@@ -85,6 +97,8 @@ func (t *wrappedTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 		if err != nil {
 			if attempt < attempts && isIdempotent(method) {
 				backoff = t.nextBackoff(0)
+				t.log.Debugf("mailtm: retry %s %s after error %v (attempt %d/%d, backoff %v)",
+					method, req.URL.Redacted(), err, attempt, attempts, backoff)
 				select {
 				case <-t.clock.After(backoff):
 					continue
@@ -100,6 +114,8 @@ func (t *wrappedTransport) RoundTrip(req *http.Request) (*http.Response, error) 
 			if delay == 0 {
 				delay = t.nextBackoff(attempt)
 			}
+			t.log.Debugf("mailtm: retry %s %s after status %d (attempt %d/%d, delay %v)",
+				method, req.URL.Redacted(), resp.StatusCode, attempt, attempts, delay)
 			io.Copy(io.Discard, resp.Body)
 			resp.Body.Close()
 			select {

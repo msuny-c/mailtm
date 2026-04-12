@@ -11,6 +11,15 @@ import (
 	"time"
 )
 
+func TestSSE_InvalidHubURL(t *testing.T) {
+	c, _ := New()
+	c = c.WithToken("tkn")
+	_, err := c.SubscribeAccount(context.Background(), "acc", WithHubURL("not-a-valid-absolute-url"))
+	if err == nil {
+		t.Fatal("expected error for invalid hub URL")
+	}
+}
+
 func TestSSE_SubscribeAccount_ReconnectAndLastEventID(t *testing.T) {
 	var conn int32
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

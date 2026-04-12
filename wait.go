@@ -42,11 +42,12 @@ func (c *Client) WaitForFirstMessage(ctx context.Context, opts WaitOptions) (*Me
 
 	for {
 		coll, err := c.ListMessages(ctx, 1)
-		if err == nil {
-			for _, m := range coll.Member {
-				if check(m) {
-					return c.GetMessage(ctx, m.ID)
-				}
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range coll.Member {
+			if check(m) {
+				return c.GetMessage(ctx, m.ID)
 			}
 		}
 		select {

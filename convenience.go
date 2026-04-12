@@ -176,6 +176,7 @@ func (c *Client) DownloadAllAttachments(ctx context.Context, messageID string, d
 		}
 		if err := c.DownloadByURL(ctx, att.DownloadURL, f); err != nil {
 			f.Close()
+			_ = os.Remove(path)
 			return saved, err
 		}
 		f.Close()

@@ -80,7 +80,7 @@ func New(opts ...Option) (*Client, error) {
 func (c *Client) WithToken(token string) *Client {
 	cc := *c
 	cc.token = token
-	baseRT := c.hc.Transport
+	baseRT := unwrapMailTMTransport(c.hc.Transport)
 	if baseRT == nil {
 		baseRT = http.DefaultTransport
 	}

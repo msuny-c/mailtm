@@ -103,6 +103,21 @@ func TestTransport_RetryAfterRespected(t *testing.T) {
 	}
 }
 
+func TestWithToken_ChainedUsesLatestToken(t *testing.T) {
+	var saw string
+	rt := rtFunc(func(r *http.Request) (*http.Response, error) {
+		saw = r.Header.Get("Authorization")
+		return mkResp(200, `{}`, nil), nil
+	})
+	c := newClientWithRT(rt)
+	if err := c.WithToken("first").WithToken("second").doJSON(context.Background(), http.MethodGet, "/x", nil, nil); err != nil {
+		t.Fatalf("unexpected: %v", err)
+	}
+	if saw != "Bearer second" {
+		t.Fatalf("Authorization: want %q, got %q", "Bearer second", saw)
+	}
+}
+
 func TestTransport_NetworkErrorRetry(t *testing.T) {
 	var calls int32
 	rt := rtFunc(func(r *http.Request) (*http.Response, error) {

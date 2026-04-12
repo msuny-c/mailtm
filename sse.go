@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -87,6 +88,14 @@ func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ..
 		return nil, errors.New("SubscribeAccount requires an authenticated client (use WithToken)")
 	}
 
+	hub, err := url.Parse(cfg.HubURL)
+	if err != nil {
+		return nil, err
+	}
+	if hub.Scheme == "" || hub.Host == "" {
+		return nil, errors.New("mailtm: invalid SSE hub URL")
+	}
+
 	ctx, cancel := context.WithCancel(ctx)
 	s := &sseStream{
 		events: make(chan Event, 16),
@@ -97,10 +106,12 @@ func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ..
 		defer s.wg.Done()
 		defer close(s.events)
 
+		ck := c.clock
 		lastID := cfg.LastEventID
-		delay := cfg.ReconnectDelay
+		reconnectBase := cfg.ReconnectDelay
+		backoff := cfg.ReconnectDelay
 		for {
-			u, _ := url.Parse(cfg.HubURL)
+			u := *hub
 			q := u.Query()
 			q.Set("topic", "/accounts/"+accountID)
 			if lastID != "" {
@@ -108,7 +119,17 @@ func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ..
 			}
 			u.RawQuery = q.Encode()
 
-			req, _ := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+			if err != nil {
+				s.setErr(err)
+				select {
+				case <-ctx.Done():
+					return
+				case <-ck.After(backoff):
+					backoff = minDur(backoff*2, cfg.MaxReconnectDelay)
+					continue
+				}
+			}
 			req.Header.Set("Accept", "text/event-stream")
 			if c.token != "" {
 				req.Header.Set("Authorization", "Bearer "+c.token)
@@ -119,8 +140,8 @@ func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ..
 				select {
 				case <-ctx.Done():
 					return
-				case <-time.After(delay):
-					delay = minDur(delay*2, cfg.MaxReconnectDelay)
+				case <-ck.After(backoff):
+					backoff = minDur(backoff*2, cfg.MaxReconnectDelay)
 					continue
 				}
 			}
@@ -129,12 +150,12 @@ func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ..
 				select {
 				case <-ctx.Done():
 					return
-				case <-time.After(delay):
-					delay = minDur(delay*2, cfg.MaxReconnectDelay)
+				case <-ck.After(backoff):
+					backoff = minDur(backoff*2, cfg.MaxReconnectDelay)
 					continue
 				}
 			}
-			delay = cfg.ReconnectDelay
+			backoff = reconnectBase
 
 			br := bufio.NewReader(resp.Body)
 			var ev Event
@@ -178,7 +199,11 @@ func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ..
 				case strings.HasPrefix(line, "event:"):
 					ev.Type = strings.TrimSpace(line[6:])
 				case strings.HasPrefix(line, "retry:"):
-					// retry is in milliseconds per spec; keep as duration
+					if ms, err := strconv.ParseUint(strings.TrimSpace(line[6:]), 10, 64); err == nil {
+						d := time.Duration(ms) * time.Millisecond
+						ev.Retry = d
+						reconnectBase = minDur(d, cfg.MaxReconnectDelay)
+					}
 				case strings.HasPrefix(line, "data:"):
 					if len(dataBuf) > 0 {
 						dataBuf = append(dataBuf, '\n')
@@ -189,8 +214,8 @@ func (c *Client) SubscribeAccount(ctx context.Context, accountID string, opts ..
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(delay):
-				delay = minDur(delay*2, cfg.MaxReconnectDelay)
+			case <-ck.After(backoff):
+				backoff = minDur(backoff*2, cfg.MaxReconnectDelay)
 			}
 		}
 	}()
